@@ -13,6 +13,8 @@ module tb_core;
    logic [31:0] word;
    reg [31:0]   file;
 
+   time         runTime = 0;
+
    task read_file;
       addr_ = 4;
       file = $fopen("out/dump", "r");
@@ -25,15 +27,16 @@ module tb_core;
          $fscanf(file, "%h", word);
          core.inst_mem.memory[addr_] = word;
          addr_ = addr_ + 4;
+         runTime = runTime + 30;
       end
-      memory[addr_-4] = 32'bx;
+      core.inst_mem.memory[addr_-4] = 32'bx;
       $fclose(file);
+      runTime = runTime + 60;
    endtask // read_file
 
    initial begin
       read_file;
    end
-
 
    initial begin
       $dumpfile("out/output.vcd");
@@ -42,7 +45,7 @@ module tb_core;
       #5
         rst = 1'b0;
       clk = 0;
-      #200;
+      #runTime;
       $finish;
    end
 

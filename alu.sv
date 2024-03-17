@@ -4,7 +4,7 @@ module alu
     )
    (
     input logic [N-1:0]  src1, src2,
-    input logic [2:0]    op,
+    input logic [3:0]    op,
     output logic [N-1:0] res,
     output logic [3:0]   flags
     );
@@ -13,14 +13,28 @@ module alu
    logic [N:0]           temp;
 
    assign temp = src1 - src2;
+   logic signed [31:0] temp1, temp2;
 
    always_comb begin : alu_results
       case (op)
-        'b000 : {carry_out, res} = src1 + src2;
-        'b001 : {carry_out, res} = temp;
-        'b010 : {carry_out, res} = {1'b0, src1} & {1'b0, src2};
-        'b011 : {carry_out, res} = {1'b0, src1} | {1'b0, src2};
-        'b101 : {carry_out, res[N-1:1], res[0]} = {1'b0, 31'b0, temp[N-1] ^ ((~op[1]) && (temp[N-1] ^ src1[N-1]) && (~(~(op[0] ^ src1[N-1]) ^ src2[N-1])))};
+        'b0000 : {carry_out, res} = src1 + src2;
+        'b0001 : {carry_out, res} = temp;
+        'b0010 : {carry_out, res} = {1'b0, src1} & {1'b0, src2};
+        'b0011 : {carry_out, res} = {1'b0, src1} | {1'b0, src2};
+        'b0101 : begin
+           temp1 = src1;
+           temp2 = src2;
+           if(temp1 < temp2) {carry_out, res} = 1;
+           else {carry_out, res} = 0;
+        end
+        'b1001 : begin
+           if(src1 < src2) {carry_out, res} = 1;
+           else {carry_out, res} = 0;
+        end
+        'b0100 : {carry_out, res} = {1'b0, src1} ^ {1'b0, src2};
+        'b0110 : {carry_out, res} = {1'b0, src1 >>> src2[4:0]};
+        'b0111 : {carry_out, res} = {1'b0, src1 >> src2[4:0]};
+        'b1000 : {carry_out, res} = {1'b0, src1 << src2[4:0]};
         default : {carry_out, res} = src1 + src2;
       endcase; // case (op)
    end

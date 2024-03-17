@@ -1,0 +1,16 @@
+#+title: Notes
+
+
+* ALU Codes
+ | Function | ALU Control |
+ |----------+-------------|
+ | ADD      |         000 |
+ | SUB      |         001 |
+ | SLL      |        1000 |
+ | SLT      |         101 |
+ | SLTU     |        1001 |
+ | SRL      |         111 |
+ | SRA      |         110 |
+ | OR       |         011 |
+ | AND      |         010 |
+ | XOR      |         100 |

@@ -31,7 +31,7 @@ module core
 
    // Control Signals
    logic         regWrite, pcSrc, memWrite, aluSrc, zero, branch_, jump;
-   logic [2:0]   aluControl;
+   logic [3:0]   aluControl;
    logic [1:0]   immSrc;
    logic [1:0]   resultSrc;
    logic [1:0]   aluOp;
@@ -140,7 +140,7 @@ module core
 
    always_comb begin
       case (op)
-        7'b0000011: begin
+        7'b0000011: begin   //lw
            regWrite = 1'b1;
            immSrc = 2'b00;
            aluSrc = 1'b1;
@@ -150,7 +150,7 @@ module core
            aluOp = 2'b00;
            jump = 1'b0;
         end
-        7'b0100011: begin
+        7'b0100011: begin    //sw
            regWrite = 1'b0;
            immSrc = 2'b01;
            aluSrc = 1'b1;
@@ -160,7 +160,7 @@ module core
            aluOp = 2'b00;
            jump = 1'b0;
         end
-        7'b0110011: begin
+        7'b0110011: begin   //r-type
            regWrite = 1'b1;
            immSrc = 2'bxx;
            aluSrc = 1'b0;
@@ -170,7 +170,7 @@ module core
            aluOp = 2'b10;
            jump = 1'b0;
         end
-        7'b1100011: begin
+        7'b1100011: begin  //beq
            regWrite = 1'b0;
            immSrc = 2'b10;
            aluSrc = 1'b0;
@@ -180,7 +180,7 @@ module core
            aluOp = 2'b01;
            jump = 1'b0;
         end
-        7'b0010011: begin
+        7'b0010011: begin //i-type (alu)
            regWrite = 1'b1;
            immSrc = 2'b00;
            aluSrc = 1'b1;
@@ -190,7 +190,7 @@ module core
            aluOp = 2'b10;
            jump = 1'b0;
         end
-        7'b1101111: begin
+        7'b1101111: begin // jal
            regWrite = 1'b1;
            immSrc = 2'b11;
            aluSrc = 1'bx;
@@ -200,14 +200,15 @@ module core
            aluOp = 2'bxx;
            jump = 1'b1;
         end
+
         default: begin
-           regWrite = 1'b1;
-           immSrc = 2'b00;
-           aluSrc = 1'b1;
+           regWrite = 1'b0;
+           immSrc = 2'bxx;
+           aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 2'b01;
+           resultSrc = 2'bxx;
            branch_ = 1'b0;
-           aluOp = 2'b00;
+           aluOp = 2'bxx;
            jump = 1'b0;
         end
       endcase; // case (op)
@@ -219,19 +220,28 @@ module core
 
    always_comb begin
       case (aluOp)
-        2'b00: aluControl = 3'b000;
-        2'b01: aluControl = 3'b001;
+        2'b00: aluControl = 4'b0000;
+        2'b01: aluControl = 4'b0001;
         2'b10: begin
-           if(funct3 == 3'b000) begin
-              if({op[5], funct7} == 2'b11) aluControl = 3'b001;
-              else aluControl = 3'b000;
-           end
-           else if(funct3 == 3'b010) aluControl = 3'b101;
-           else if(funct3 == 3'b110) aluControl = 3'b011;
-           else if(funct3 == 3'b111) aluControl = 3'b010;
-           else aluControl = 3'b000;
+           case (funct3)
+             3'b000: begin
+                if({op[5], funct7} == 2'b11) aluControl = 4'b0001;
+                else aluControl = 4'b0000;
+             end
+             3'b001: aluControl = 4'b1000;
+             3'b010: aluControl = 4'b0101;
+             3'b011: aluControl = 4'b1001;
+             3'b100: aluControl = 4'b0100;
+             3'b101: begin
+                if(funct7 == 1'b1) aluControl = 4'b0110;
+                else aluControl = 4'b0111;
+             end
+             3'b110: aluControl = 4'b0011;
+             3'b111: aluControl = 4'b0010;
+             default: aluControl = 4'b0000;
+           endcase; // case (funct3)
         end
-        default: aluControl = 3'b000;
+        default: aluControl = 4'b0000;
       endcase; // case (aluOp)
    end; // always_comb
 
