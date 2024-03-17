@@ -140,7 +140,7 @@ module core
 
    always_comb begin
       case (op)
-        7'b0000011: begin
+        7'b0000011: begin   //lw
            regWrite = 1'b1;
            immSrc = 2'b00;
            aluSrc = 1'b1;
@@ -150,7 +150,7 @@ module core
            aluOp = 2'b00;
            jump = 1'b0;
         end
-        7'b0100011: begin
+        7'b0100011: begin    //sw
            regWrite = 1'b0;
            immSrc = 2'b01;
            aluSrc = 1'b1;
@@ -160,7 +160,7 @@ module core
            aluOp = 2'b00;
            jump = 1'b0;
         end
-        7'b0110011: begin
+        7'b0110011: begin   //r-type
            regWrite = 1'b1;
            immSrc = 2'bxx;
            aluSrc = 1'b0;
@@ -170,7 +170,7 @@ module core
            aluOp = 2'b10;
            jump = 1'b0;
         end
-        7'b1100011: begin
+        7'b1100011: begin  //beq
            regWrite = 1'b0;
            immSrc = 2'b10;
            aluSrc = 1'b0;
@@ -180,7 +180,7 @@ module core
            aluOp = 2'b01;
            jump = 1'b0;
         end
-        7'b0010011: begin
+        7'b0010011: begin //i-type (alu)
            regWrite = 1'b1;
            immSrc = 2'b00;
            aluSrc = 1'b1;
@@ -190,7 +190,7 @@ module core
            aluOp = 2'b10;
            jump = 1'b0;
         end
-        7'b1101111: begin
+        7'b1101111: begin // jal
            regWrite = 1'b1;
            immSrc = 2'b11;
            aluSrc = 1'bx;
@@ -200,14 +200,15 @@ module core
            aluOp = 2'bxx;
            jump = 1'b1;
         end
-        default: begin
-           regWrite = 1'b1;
-           immSrc = 2'b00;
-           aluSrc = 1'b1;
+
+        default: begin //lw
+           regWrite = 1'b0;
+           immSrc = 2'bxx;
+           aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 2'b01;
+           resultSrc = 2'bxx;
            branch_ = 1'b0;
-           aluOp = 2'b00;
+           aluOp = 2'bxx;
            jump = 1'b0;
         end
       endcase; // case (op)

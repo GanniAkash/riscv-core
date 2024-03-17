@@ -51,7 +51,7 @@ module register_file
 
    always_ff @(posedge clk, posedge rst) begin
       if(rst) begin
-         for(int i = 1; i < 32; i = i + 1) begin
+         for(int i = 0; i < 32; i = i + 1) begin
             regs[i] <= 32'b0;
          end
       end

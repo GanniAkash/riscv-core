@@ -20,7 +20,10 @@ module alu
         'b001 : {carry_out, res} = temp;
         'b010 : {carry_out, res} = {1'b0, src1} & {1'b0, src2};
         'b011 : {carry_out, res} = {1'b0, src1} | {1'b0, src2};
-        'b101 : {carry_out, res[N-1:1], res[0]} = {1'b0, 31'b0, temp[N-1] ^ ((~op[1]) && (temp[N-1] ^ src1[N-1]) && (~(~(op[0] ^ src1[N-1]) ^ src2[N-1])))};
+        'b101 : begin
+           if(src1 < src2) {carry_out, res} = 1;
+           else {carry_out, res} = 0;
+        end
         default : {carry_out, res} = src1 + src2;
       endcase; // case (op)
    end

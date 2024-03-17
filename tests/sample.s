@@ -1,8 +1,8 @@
 
-    addi s0, zero, 4
-    addi s1, zero, 4
-    beq  s0, s1, target
-    addi s1, s1, 1
-    sub s1, s1, s0
-target:
-    add s1, s1, s0
+    addi s0, zero, 10
+    jal x1, there
+    addi s1, zero, 20
+    addi x10, zero, 25
+there:
+    addi s1, zero, -10
+    jr x1
