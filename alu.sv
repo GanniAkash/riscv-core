@@ -30,4 +30,4 @@ module alu
    assign flags[2] = carry_out && (~op[1]);
    assign flags[3] = (~op[1]) && (temp[N-1] ^ src1[N-1]) && (~(~(op[0] ^ src1[N-1]) ^ src2[N-1]));
 
-endmodule; // alu
+endmodule // alu
