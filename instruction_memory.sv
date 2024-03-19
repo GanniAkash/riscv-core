@@ -2,17 +2,17 @@ module instruction_memory
   #(
     parameter N = 32,
     parameter A = 32,
-    parameter SIZE = 32768 // 32kB
+    parameter SIZE = 32768*4 // 32kB
     )
    (
     input logic [A-1:0]  addr,
     output logic [N-1:0] data
     );
 
-   reg [N-1:0]           memory [0:SIZE-1];
+   reg [7:0]           memory [0:SIZE-1];
 
 
-   assign data = memory[addr];
+   assign data = {memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]};
 
 
 endmodule // instruction_memory

@@ -47,6 +47,13 @@
 |       111 | readData Half Unsigned |
 |      1000 | readData Byte Unsigned |
 
+* Write Selects
+| writeSrc | Selected Signal     |
+|----------+---------------------|
+|       00 | readData (from mem) |
+|       01 | readData Half       |
+|       10 | readData Byte       |
+
 * Immediate Encoding
 | immSrc | Immediate |
 |--------+-----------|

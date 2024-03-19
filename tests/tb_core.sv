@@ -14,9 +14,9 @@ module tb_core;
    reg [31:0]   file;
 
    time         runTime = 0;
+   integer      co = 0;
 
    task read_file;
-      addr_ = 4;
       file = $fopen("out/dump", "r");
       if (file == 0) begin
          $display("Error opening the file");
@@ -24,12 +24,14 @@ module tb_core;
       end
 
       while(!$feof(file)) begin
-         $fscanf(file, "%h", word);
-         core.inst_mem.memory[addr_] = word;
-         addr_ = addr_ + 4;
+         $fscanf(file, "%h %h", addr_, word);
+         core.inst_mem.memory[addr_] = word[7:0];
+         core.inst_mem.memory[addr_+1] = word[15:8];
+         core.inst_mem.memory[addr_+2] = word[23:16];
+         core.inst_mem.memory[addr_+3] = word[31:24];
          runTime = runTime + 30;
+         co = co + 1;
       end
-      core.inst_mem.memory[addr_-4] = 32'bx;
       $fclose(file);
       runTime = runTime + 60;
    endtask // read_file
