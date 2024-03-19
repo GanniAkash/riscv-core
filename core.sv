@@ -32,8 +32,8 @@ module core
    // Control Signals
    logic         regWrite, pcSrc, memWrite, aluSrc, zero, branch_, jump;
    logic [3:0]   aluControl;
-   logic [1:0]   immSrc;
-   logic [1:0]   resultSrc;
+   logic [2:0]   immSrc;
+   logic [2:0]   resultSrc;
    logic [1:0]   aluOp;
 
    logic [6:0]   op;
@@ -89,7 +89,7 @@ module core
 
    assign pc_plus_4 = pc + 4;
    assign pc_next = (pcSrc == 1'b1) ? pc_target : pc_plus_4;
-   assign pc_target = (op[3:2] == 2'b01) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
+   assign pc_target = (op[4:2] == 3'b001) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
 
 
    // Register-File
@@ -116,6 +116,7 @@ module core
         'b01: immExt = {{20{instr[31]}}, instr[31:25], instr[11:7]};
         'b10: immExt = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
         'b11: immExt = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+        'b100: immExt = {instr[31:12], 12'b0};
         default: immExt = {{20{instr[31]}}, instr[31:20]};
       endcase; // case (immSrc)
    end;
@@ -126,6 +127,8 @@ module core
         'b00 : result = aluResult;
         'b01 : result = readData;
         'b10 : result = pc_plus_4;
+        'b11 : result = immExt;
+        'b100: result = pc_target;
         default : result = aluResult;
       endcase; // case (resultSrc)
    end;
@@ -142,40 +145,40 @@ module core
       case (op)
         7'b0000011: begin   //lw
            regWrite = 1'b1;
-           immSrc = 2'b00;
+           immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 2'b01;
+           resultSrc = 3'b001;
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b0;
         end
         7'b0100011: begin    //sw
            regWrite = 1'b0;
-           immSrc = 2'b01;
+           immSrc = 3'b001;
            aluSrc = 1'b1;
            memWrite = 1'b1;
-           resultSrc = 2'bxx;
+           resultSrc = 3'bxxx;
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b0;
         end
         7'b0110011: begin   //r-type
            regWrite = 1'b1;
-           immSrc = 2'bxx;
+           immSrc = 3'bxxx;
            aluSrc = 1'b0;
            memWrite = 1'b0;
-           resultSrc = 2'b00;
+           resultSrc = 3'b000;
            branch_ = 1'b0;
            aluOp = 2'b10;
            jump = 1'b0;
         end
         7'b1100011: begin  //branches
            regWrite = 1'b0;
-           immSrc = 2'b10;
+           immSrc = 3'b010;
            aluSrc = 1'b0;
            memWrite = 1'b0;
-           resultSrc = 2'bxx;
+           resultSrc = 3'bxxx;
            branch_ = 1'b1;
            // aluOp = 2'b01;
            if(funct3 == 3'b000 || funct3 == 3'b001) aluOp = 2'b01;
@@ -184,40 +187,60 @@ module core
         end
         7'b0010011: begin //i-type (alu)
            regWrite = 1'b1;
-           immSrc = 2'b00;
+           immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 2'b00;
+           resultSrc = 3'b000;
            branch_ = 1'b0;
            aluOp = 2'b10;
            jump = 1'b0;
         end
         7'b1101111: begin // jal
            regWrite = 1'b1;
-           immSrc = 2'b11;
+           immSrc = 3'b011;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 2'b10;
+           resultSrc = 3'b010;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b1;
         end
         7'b1100111: begin //jalr
            regWrite = 1'b1;
-           immSrc = 2'b00;
+           immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 2'b10;
+           resultSrc = 3'b010;
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b1;
         end
-        default: begin
-           regWrite = 1'b0;
-           immSrc = 2'bxx;
+        7'b0110111: begin //lui
+           regWrite = 1'b1;
+           immSrc = 3'b100;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 2'bxx;
+           resultSrc = 3'b011;
+           branch_ = 1'b0;
+           aluOp = 2'bxx;
+           jump = 1'b0;
+        end
+        7'b0010111: begin //auipc
+           regWrite = 1'b1;
+           immSrc = 3'b100;
+           aluSrc = 1'bx;
+           memWrite = 1'b0;
+           resultSrc = 3'b100;
+           branch_ = 1'b0;
+           aluOp = 2'bxx;
+           jump = 1'b0;
+        end
+        default: begin
+           regWrite = 1'b0;
+           immSrc = 3'bxxx;
+           aluSrc = 1'bx;
+           memWrite = 1'b0;
+           resultSrc = 3'bxxx;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b0;
@@ -234,7 +257,7 @@ module core
         3'b101: pcSrc = (zero && branch_) || jump;
         3'b110: pcSrc = (~zero && branch_) || jump;
         3'b111: pcSrc = (zero && branch_) || jump;
-        default: pcSrc = (zero && branch_) || jump;
+        default: pcSrc =  branch_ || jump;
       endcase; // case (funct3)
    end
 

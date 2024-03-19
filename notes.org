@@ -35,11 +35,13 @@
  |       0100 | XOR      |
 
 * Result Selects
-| resultSrc | Selected Signal  |
-|-----------+------------------|
-|        00 | aluResult        |
-|        01 | readData(memory) |
-|        10 | PC+4             |
+| resultSrc | Selected Signal      |
+|-----------+----------------------|
+|        00 | aluResult            |
+|        01 | readData(memory)     |
+|        10 | PC+4                 |
+|        11 | Immediate            |
+|       100 | PC + uimm(pc_target) |
 
 * Immediate Encoding
 | immSrc | Immediate |
@@ -48,3 +50,4 @@
 |     01 | S-type    |
 |     10 | B-type    |
 |     11 | J-type    |
+|    100 | UImm      |
