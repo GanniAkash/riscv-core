@@ -1,7 +1,9 @@
 
-    addi x8, zero, 10
-    addi x9, zero, -5
-    addi x10, zero, -12
-    slt x11, x8, x9
-    slt x12, x8, x10
-    sltu x7, x8, x9
+    addi x7, zero, -1
+    addi x8, zero, -20
+    bltu x7, x8, test
+    addi x10, zero, 0
+    addi x9, zero, 8
+test:
+    addi x9, zero, 15
+    addi x11, zero, 69

@@ -89,7 +89,7 @@ module core
 
    assign pc_plus_4 = pc + 4;
    assign pc_next = (pcSrc == 1'b1) ? pc_target : pc_plus_4;
-   assign pc_target = pc + immExt;
+   assign pc_target = (op[3:2] == 2'b01) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
 
 
    // Register-File
@@ -170,14 +170,16 @@ module core
            aluOp = 2'b10;
            jump = 1'b0;
         end
-        7'b1100011: begin  //beq
+        7'b1100011: begin  //branches
            regWrite = 1'b0;
            immSrc = 2'b10;
            aluSrc = 1'b0;
            memWrite = 1'b0;
            resultSrc = 2'bxx;
            branch_ = 1'b1;
-           aluOp = 2'b01;
+           // aluOp = 2'b01;
+           if(funct3 == 3'b000 || funct3 == 3'b001) aluOp = 2'b01;
+           else aluOp = 2'b11;
            jump = 1'b0;
         end
         7'b0010011: begin //i-type (alu)
@@ -200,7 +202,16 @@ module core
            aluOp = 2'bxx;
            jump = 1'b1;
         end
-
+        7'b1100111: begin //jalr
+           regWrite = 1'b1;
+           immSrc = 2'b00;
+           aluSrc = 1'b1;
+           memWrite = 1'b0;
+           resultSrc = 2'b10;
+           branch_ = 1'b0;
+           aluOp = 2'b00;
+           jump = 1'b1;
+        end
         default: begin
            regWrite = 1'b0;
            immSrc = 2'bxx;
@@ -214,7 +225,18 @@ module core
       endcase; // case (op)
    end; // always_comb
 
-   assign pcSrc = (zero && branch_) || jump;
+   // assign pcSrc = (zero && branch_) || jump;
+   always_comb begin
+      case(funct3)
+        3'b000: pcSrc = (zero && branch_) || jump;
+        3'b001: pcSrc = (~zero && branch_) || jump;
+        3'b100: pcSrc = (~zero && branch_) || jump;
+        3'b101: pcSrc = (zero && branch_) || jump;
+        3'b110: pcSrc = (~zero && branch_) || jump;
+        3'b111: pcSrc = (zero && branch_) || jump;
+        default: pcSrc = (zero && branch_) || jump;
+      endcase; // case (funct3)
+   end
 
    // ALU Decoder
 
@@ -240,6 +262,15 @@ module core
              3'b111: aluControl = 4'b0010;
              default: aluControl = 4'b0000;
            endcase; // case (funct3)
+        end // case: 2'b10
+        2'b11: begin
+           case(funct3)
+             3'b100: aluControl = 4'b0101;
+             3'b101: aluControl = 4'b0101;
+             3'b110: aluControl = 4'b1001;
+             3'b111: aluControl = 4'b1001;
+             default: aluControl = 4'b0001;
+           endcase // case (funct3)
         end
         default: aluControl = 4'b0000;
       endcase; // case (aluOp)

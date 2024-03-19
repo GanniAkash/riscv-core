@@ -1,16 +1,50 @@
 #+title: Notes
 
+* Opcodes
+| Opcode       | Type            |
+|--------------+-----------------|
+| 0000011  (3) | Loads           |
+| 0010011 (19) | I-type          |
+| 0010111 (23) | auipc           |
+| 0100011 (35) | Stores          |
+| 0110011 (51) | R-type (or) lui |
+| 1100011 (99) | Branches        |
+| 1100111(103) | jalr            |
+| 1101111(111) | jal             |
+
+
+* ALU OP
+| aluOp | Operation         |
+|-------+-------------------|
+|    00 | ADD               |
+|    01 | SUB               |
+|    10 | depends on funct3 |
 
 * ALU Codes
- | Function | ALU Control |
- |----------+-------------|
- | ADD      |         000 |
- | SUB      |         001 |
- | SLL      |        1000 |
- | SLT      |         101 |
- | SLTU     |        1001 |
- | SRL      |         111 |
- | SRA      |         110 |
- | OR       |         011 |
- | AND      |         010 |
- | XOR      |         100 |
+ | aluControl | Function |
+ |------------+----------|
+ |       0000 | ADD      |
+ |       0001 | SUB      |
+ |       1000 | SLL      |
+ |       0101 | SLT      |
+ |       1001 | SLTU     |
+ |       0111 | SRL      |
+ |       0110 | SRA      |
+ |       0011 | OR       |
+ |       0010 | AND      |
+ |       0100 | XOR      |
+
+* Result Selects
+| resultSrc | Selected Signal  |
+|-----------+------------------|
+|        00 | aluResult        |
+|        01 | readData(memory) |
+|        10 | PC+4             |
+
+* Immediate Encoding
+| immSrc | Immediate |
+|--------+-----------|
+|     00 | I-type    |
+|     01 | S-type    |
+|     10 | B-type    |
+|     11 | J-type    |

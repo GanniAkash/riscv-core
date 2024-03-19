@@ -13,7 +13,7 @@ module alu
    logic [N:0]           temp;
 
    assign temp = src1 - src2;
-   logic signed [31:0] temp1, temp2;
+   logic signed [31:0]   temp1, temp2;
 
    always_comb begin : alu_results
       case (op)
