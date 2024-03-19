@@ -1,5 +1,10 @@
 
-    addi x6, zero, 143
-    auipc x7, 0xFA
-    lui x8, 0xEC
-    addi x8, x8, -1
+    addi x7, zero, 10
+    lui x8, 0xabd1
+    addi x8, x8, 0xaf
+    sw x8, 8(x7)
+    sh x8, 9(x7)
+    sb x8, 10(x7)
+    lw x9, 8(x7)
+    lw x10, 9(x7)
+    lw x11, 10(x7)

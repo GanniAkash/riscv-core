@@ -33,8 +33,9 @@ module core
    logic         regWrite, pcSrc, memWrite, aluSrc, zero, branch_, jump;
    logic [3:0]   aluControl;
    logic [2:0]   immSrc;
-   logic [2:0]   resultSrc;
+   logic [3:0]   resultSrc;
    logic [1:0]   aluOp;
+   logic [1:0]   writeSrc;
 
    logic [6:0]   op;
    logic [2:0]   funct3;
@@ -107,15 +108,23 @@ module core
 
 
    // Data Memory
-   assign writeData = rd2;
+   // assign writeData = rd2;
+   always_comb begin
+      case(writeSrc)
+        2'b00: writeData = rd2;
+        2'b01: writeData = {16'b0, rd2[15:0]};
+        2'b10: writeData = {24'b0, rd2[7:0]};
+        default: writeData = rd2;
+      endcase; // case (writeSrc)
+   end
 
    // Immediate
    always_comb begin
       case(immSrc)
-        'b00: immExt = {{20{instr[31]}}, instr[31:20]};
-        'b01: immExt = {{20{instr[31]}}, instr[31:25], instr[11:7]};
-        'b10: immExt = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
-        'b11: immExt = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+        'b000: immExt = {{20{instr[31]}}, instr[31:20]};
+        'b001: immExt = {{20{instr[31]}}, instr[31:25], instr[11:7]};
+        'b010: immExt = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+        'b011: immExt = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
         'b100: immExt = {instr[31:12], 12'b0};
         default: immExt = {{20{instr[31]}}, instr[31:20]};
       endcase; // case (immSrc)
@@ -124,11 +133,15 @@ module core
    //Result
    always_comb begin
       case(resultSrc)
-        'b00 : result = aluResult;
-        'b01 : result = readData;
-        'b10 : result = pc_plus_4;
-        'b11 : result = immExt;
-        'b100: result = pc_target;
+        4'b000 : result = aluResult;
+        4'b001 : result = readData;
+        4'b010 : result = pc_plus_4;
+        4'b011 : result = immExt;
+        4'b100 : result = pc_target;
+        4'b101 : result = {{16{readData[15]}}, readData[15:0]};
+        4'b110 : result = {{24{readData[7]}}, readData[7:0]};
+        4'b111 : result = {16'b0, readData[15:0]};
+        4'b1000: result = {24'b0, readData[7:0]};
         default : result = aluResult;
       endcase; // case (resultSrc)
    end;
@@ -143,107 +156,130 @@ module core
 
    always_comb begin
       case (op)
-        7'b0000011: begin   //lw
+        7'b0000011: begin   //loads
            regWrite = 1'b1;
            immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 3'b001;
+           // resultSrc = 4'b001;
+           case(funct3)
+             3'b000: resultSrc = 4'b0110;
+             3'b001: resultSrc = 4'b0101;
+             3'b010: resultSrc = 4'b0001;
+             3'b101: resultSrc = 4'b0111;
+             3'b100: resultSrc = 4'b1000;
+             default: resultSrc = 4'b0001;
+           endcase; // case (funct3)
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
-        7'b0100011: begin    //sw
+        7'b0100011: begin    //store
            regWrite = 1'b0;
            immSrc = 3'b001;
            aluSrc = 1'b1;
            memWrite = 1'b1;
-           resultSrc = 3'bxxx;
+           resultSrc = 4'bxxx;
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b0;
+           case (funct3)
+             3'b000: writeSrc = 2'b10;
+             3'b001: writeSrc = 2'b01;
+             3'b010: writeSrc = 2'b00;
+             default: writeSrc = 2'b00;
+           endcase // case (funct)
         end
         7'b0110011: begin   //r-type
            regWrite = 1'b1;
            immSrc = 3'bxxx;
            aluSrc = 1'b0;
            memWrite = 1'b0;
-           resultSrc = 3'b000;
+           resultSrc = 4'b000;
            branch_ = 1'b0;
            aluOp = 2'b10;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
         7'b1100011: begin  //branches
            regWrite = 1'b0;
            immSrc = 3'b010;
            aluSrc = 1'b0;
            memWrite = 1'b0;
-           resultSrc = 3'bxxx;
+           resultSrc = 4'bxxx;
            branch_ = 1'b1;
            // aluOp = 2'b01;
            if(funct3 == 3'b000 || funct3 == 3'b001) aluOp = 2'b01;
            else aluOp = 2'b11;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
         7'b0010011: begin //i-type (alu)
            regWrite = 1'b1;
            immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 3'b000;
+           resultSrc = 4'b000;
            branch_ = 1'b0;
            aluOp = 2'b10;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
         7'b1101111: begin // jal
            regWrite = 1'b1;
            immSrc = 3'b011;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 3'b010;
+           resultSrc = 4'b010;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b1;
+           writeSrc = 2'b00;
         end
         7'b1100111: begin //jalr
            regWrite = 1'b1;
            immSrc = 3'b000;
            aluSrc = 1'b1;
            memWrite = 1'b0;
-           resultSrc = 3'b010;
+           resultSrc = 4'b010;
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b1;
+           writeSrc = 2'b00;
         end
         7'b0110111: begin //lui
            regWrite = 1'b1;
            immSrc = 3'b100;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 3'b011;
+           resultSrc = 4'b011;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
         7'b0010111: begin //auipc
            regWrite = 1'b1;
            immSrc = 3'b100;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 3'b100;
+           resultSrc = 4'b100;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
         default: begin
            regWrite = 1'b0;
            immSrc = 3'bxxx;
            aluSrc = 1'bx;
            memWrite = 1'b0;
-           resultSrc = 3'bxxx;
+           resultSrc = 4'bxxx;
            branch_ = 1'b0;
            aluOp = 2'bxx;
            jump = 1'b0;
+           writeSrc = 2'b00;
         end
       endcase; // case (op)
    end; // always_comb

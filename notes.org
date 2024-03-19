@@ -35,13 +35,17 @@
  |       0100 | XOR      |
 
 * Result Selects
-| resultSrc | Selected Signal      |
-|-----------+----------------------|
-|        00 | aluResult            |
-|        01 | readData(memory)     |
-|        10 | PC+4                 |
-|        11 | Immediate            |
-|       100 | PC + uimm(pc_target) |
+| resultSrc | Selected Signal        |
+|-----------+------------------------|
+|        00 | aluResult              |
+|        01 | readData(memory)       |
+|        10 | PC+4                   |
+|        11 | Immediate              |
+|       100 | PC + uimm(pc_target)   |
+|       101 | readData Half          |
+|       110 | readData Byte          |
+|       111 | readData Half Unsigned |
+|      1000 | readData Byte Unsigned |
 
 * Immediate Encoding
 | immSrc | Immediate |
