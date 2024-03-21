@@ -42,14 +42,23 @@ module tb_core;
 
    initial begin
       $dumpfile("out/output.vcd");
+      $monitor("%h", core.regs.x2);
       $dumpvars(0, tb_core);
       rst = 1'b1;
-      #5
+      #1
         rst = 1'b0;
       clk = 0;
-      #runTime;
+
+      while (core.regs.x2 != 1234 || core.regs.x3 != 69)  begin
+         #2 clk = ~clk;
+      end
+
+      $finish;
+   end // initial begin
+
+   initial begin
+      #500000;
       $finish;
    end
 
-   always #15 clk = ~clk;
 endmodule; // tb_core

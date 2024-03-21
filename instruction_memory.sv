@@ -9,10 +9,15 @@ module instruction_memory
     output logic [N-1:0] data
     );
 
+   wire [16:0]           addr_;
+
+   assign addr_ = addr[16:0];
+
+
    reg [7:0]           memory [0:SIZE-1];
 
 
-   assign data = {memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]};
+   assign data = {memory[addr_+3], memory[addr_+2], memory[addr_+1], memory[addr_]};
 
 
 endmodule // instruction_memory

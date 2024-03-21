@@ -69,7 +69,7 @@ module core
            .flags(_flags)
            );
 
-   data_memory dat_mem(
+   data_memory data_mem(
                        .clk(clk),
                        .rst(rst),
                        .we(memWrite),
