@@ -2,11 +2,15 @@
 `include "core.sv"
 
 module tb_core;
-   logic clk, rst;
+   logic clk, rst, blink;
+   logic [31:0] io_o;
+
 
    core core (
-              .clk(clk),
-              .rst(rst)
+              .clk_(clk),
+              .rst(rst),
+              .io_o(io_o),
+              .blink(blink)
               );
 
    logic [31:0] addr_;
@@ -25,10 +29,12 @@ module tb_core;
 
       while(!$feof(file)) begin
          $fscanf(file, "%h %h", addr_, word);
-         core.inst_mem.memory[addr_] = word[7:0];
-         core.inst_mem.memory[addr_+1] = word[15:8];
-         core.inst_mem.memory[addr_+2] = word[23:16];
-         core.inst_mem.memory[addr_+3] = word[31:24];
+         // core.inst_mem.memory[addr_] = word[7:0];
+         // core.inst_mem.memory[addr_+1] = word[15:8];
+         // core.inst_mem.memory[addr_+2] = word[23:16];
+         // core.inst_mem.memory[addr_+3] = word[31:24];
+         core.inst_mem.memory[addr_/4] = word;
+         $display("%h %h", addr_/4, word);
          runTime = runTime + 30;
          co = co + 1;
       end
@@ -40,9 +46,12 @@ module tb_core;
       read_file;
    end
 
+   logic signed [31:0] signed_rep;
+   assign signed_rep = core.regs.x15;
+
    initial begin
       $dumpfile("out/output.vcd");
-      $monitor("%h", core.regs.x2);
+      // $monitor("x15: %d", signed_rep);
       $dumpvars(0, tb_core);
       rst = 1'b1;
       #1

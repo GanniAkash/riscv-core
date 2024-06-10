@@ -16,14 +16,14 @@ module alu
    logic signed [31:0]   temp1, temp2;
 
    always_comb begin : alu_results
+           temp1 = src1;
+           temp2 = src2;
       case (op)
         'b0000 : {carry_out, res} = src1 + src2;
         'b0001 : {carry_out, res} = temp;
         'b0010 : {carry_out, res} = {1'b0, src1} & {1'b0, src2};
         'b0011 : {carry_out, res} = {1'b0, src1} | {1'b0, src2};
         'b0101 : begin
-           temp1 = src1;
-           temp2 = src2;
            if(temp1 < temp2) {carry_out, res} = 1;
            else {carry_out, res} = 0;
         end

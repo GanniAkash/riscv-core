@@ -16,8 +16,9 @@ def binstr_to_signed_int(binstr):
 
 
 with open(FILE, 'r', encoding='utf-8') as f:
+    addr = 0
     for line in f.readlines():
-        addr, inst = line.strip().split(" ")
+        _addr, inst = line.strip().split(" ")
         inst = format(int(inst, 16), '032b')
         op = inst[-7:]
         rd = inst[-12:-7]
@@ -27,8 +28,8 @@ with open(FILE, 'r', encoding='utf-8') as f:
         funct7 = inst[-32:-25]
 
         # print(addr, op, funct3, rd, rs1)
-        print(f'0x{addr}:', "\t", end="")
-
+        print(f'0x{hex(addr)[2:]}', "\t", end="")
+        addr = addr+4
         if op == '0000011':  # loads
             imm = inst[:12]
             if funct3 == '000':

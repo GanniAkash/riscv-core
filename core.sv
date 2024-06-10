@@ -1,15 +1,37 @@
-`include "instruction_memory.sv"
-`include "data_memory.sv"
-`include "alu.sv"
-`include "register_file.sv"
 
 module core
   (
-   input clk, rst
+   input clk_, rst,
+   output logic [31:0] io_o,
+   output [31:0] test,
+   output blink
    );
 
    localparam N = 32;
    localparam A = 5;
+
+
+
+    logic [24:0] counter = 25'b0;
+    logic clk = 1'b0;
+
+
+     always @(posedge clk_ or posedge rst) begin
+        if(rst) counter <= 0;
+        else begin
+         if (counter == 2) begin // 26MHz / 32*2 = 406.25kHz
+             counter <= 0;
+             clk <= ~clk; // Toggle the output clock
+         end
+         else begin
+             counter <= counter + 1;
+         end
+        end
+     end
+
+//   assign clk = clk_;
+
+   assign blink = clk;
 
    // PC Signals
    logic [N-1:0] pc, pc_next, pc_plus_4, pc_target;
@@ -30,7 +52,7 @@ module core
    logic [N-1:0] readData, writeData;
 
    // Control Signals
-   logic         regWrite, pcSrc, memWrite, aluSrc, zero, branch_, jump;
+   logic         regWrite, pcSrc, memWrite, aluSrc, zero, branch_, jump, io_s;
    logic [3:0]   aluControl;
    logic [2:0]   immSrc;
    logic [3:0]   resultSrc;
@@ -41,11 +63,12 @@ module core
    logic [2:0]   funct3;
    logic         funct7;
 
+    logic [31:0] io;
 
 
 
    instruction_memory inst_mem(
-                               .addr(pc),
+                               .addr(pc[9:0]),
                                .data(instr)
                                );
 
@@ -61,6 +84,8 @@ module core
                       .wd3(wd3)
                       );
 
+    assign test = regs.x14;
+
    alu alu(
            .src1(srcA),
            .src2(srcB),
@@ -73,24 +98,40 @@ module core
                        .clk(clk),
                        .rst(rst),
                        .we(memWrite),
-                       .addr(aluResult),
+                       .addr(aluResult[9:0]),
                        .data(writeData),
                        .rdata(readData)
                        );
 
+    //IO
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) {io_o} <= 32'b0;
+        else io_o <= io;
+    end
+
+    always_comb begin
+        if(io_s == 1'b1) io = writeData;
+        else io = io_o;
+    end
 
    // PC
 
-   always_ff @(posedge clk or posedge rst) begin // PC Process
-      if(rst == 1'b1) pc <= 0;
-      if(clk == 1'b1) begin
+   always_ff @(posedge rst or posedge clk) begin // PC Process
+      if(rst) pc <= 0;
+      else begin
          pc <= pc_next;
       end
    end
 
-   assign pc_plus_4 = pc + 4;
-   assign pc_next = (pcSrc == 1'b1) ? pc_target : pc_plus_4;
-   assign pc_target = (op[4:2] == 3'b001) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
+//   assign pc_plus_4 = pc + 4;
+//   assign pc_next = (pcSrc == 1'b1) ? pc_target : pc_plus_4;
+//   assign pc_target = (op[4:2] == 3'b001) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
+
+always @* begin
+        pc_plus_4 = pc + 4;
+        pc_target = (op[4:2] == 3'b001) ? {aluResult[N-1:1], 1'b0} : pc + immExt;
+        pc_next = (pcSrc == 1'b1) ? pc_target : pc_plus_4;
+   end
 
 
    // Register-File
@@ -142,6 +183,7 @@ module core
         4'b110 : result = {{24{readData[7]}}, readData[7:0]};
         4'b111 : result = {16'b0, readData[15:0]};
         4'b1000: result = {24'b0, readData[7:0]};
+        4'b1001: result = io_o;
         default : result = aluResult;
       endcase; // case (resultSrc)
    end;
@@ -155,7 +197,9 @@ module core
    assign zero = _flags[0];
 
    always_comb begin
+        io_s = 1'b0;
       case (op)
+
         7'b0000011: begin   //loads
            regWrite = 1'b1;
            immSrc = 3'b000;
@@ -170,6 +214,10 @@ module core
              3'b100: resultSrc = 4'b1000;
              default: resultSrc = 4'b0001;
            endcase; // case (funct3)
+
+            if(aluResult[31] == 1'b0) begin
+              resultSrc = 4'b1001;
+           end
            branch_ = 1'b0;
            aluOp = 2'b00;
            jump = 1'b0;
@@ -179,7 +227,16 @@ module core
            regWrite = 1'b0;
            immSrc = 3'b001;
            aluSrc = 1'b1;
-           memWrite = 1'b1;
+
+            if(aluResult[31] == 0) begin
+              io_s = 1'b1;
+              memWrite = 1'b0;
+           end
+           else begin
+              memWrite = 1'b1;
+              io_s = 1'b0;
+
+           end
            resultSrc = 4'bxxx;
            branch_ = 1'b0;
            aluOp = 2'b00;

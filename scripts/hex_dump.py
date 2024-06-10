@@ -2,6 +2,7 @@
 import sys
 
 FILE = sys.argv[1]
+#instr_list = ['00000013']*1024
 instr_list = []
 
 with open(FILE, 'r', encoding='utf-8') as f:
@@ -24,8 +25,13 @@ with open(FILE, 'r', encoding='utf-8') as f:
                 INSTR = ''.join(reversed([instr[j:j+2] for j in
                                           range(0, len(instr), 2)]))
                 instr_list.append([hex(addressn+(4*C))[2:], INSTR])
+                # instr_list[(addressn + (4*C))//4] = INSTR
                 C = C + 1
 
 with open('out/dump', 'w', encoding='utf-8') as f:
     for insta in instr_list:
-        f.write(str(insta[0]) + " " + insta[1] + "\n")
+        #f.write(str(insta[0]) + " " + insta[1] + "\n")
+        f.write(insta[1] + "\n")
+        # f.write(insta + "\n")
+
+        

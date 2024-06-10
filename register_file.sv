@@ -51,11 +51,11 @@ module register_file
 
    always_ff @(posedge clk, posedge rst) begin
       if(rst) begin
-         for(int i = 0; i < 32; i = i + 1) begin
+         for(integer i = 0; i < 32; i = i + 1) begin
             regs[i] <= 32'b0;
          end
       end
-      else if(we3 && clk== 1'b1) begin
+      else if(we3) begin
          regs[addr3] <= wd3;
          regs[0] <= 0;
       end
